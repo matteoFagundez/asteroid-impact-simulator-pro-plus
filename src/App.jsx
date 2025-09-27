@@ -13,6 +13,8 @@ import { fetchAsteroids, fetchOrbitElements } from './services/nasa.js';
 import { keplerToState, earthStateApprox, computeEntryAngle,  findEarthIntersection, eciToLatLon } from './lib/orbital.js';
 import { impactMetrics, impactRadii } from './lib/impactPhysics.js';
 import { findNodeImpactCandidate } from './lib/nodeImpact.js';
+import ImpactMap from "./components/ImpactMap.jsx"; 
+import UserImpactSimulator from "./components/UserImpactSimulator.jsx"; 
 
 
 // util para convertir Julian Date a fecha legible
@@ -29,6 +31,10 @@ export default function App(){
   const [scale, setScale] = useState(10);
   const [useEarthView, setUseEarthView] = useState(true);
   const [impactData, setImpactData] = useState(null);
+
+  const [manualMode, setManualMode] = useState(false); // ⬅️ toggle automático / manual
+  const [userLatLon, setUserLatLon] = useState(null);
+  const [userAngle, setUserAngle] = useState(45);
 
   const handleSelectAsteroid = async (id) => {
     const base = asteroids.find(x => x.id === id);
@@ -167,8 +173,9 @@ useEffect(() => {
   };
 
   const diameter_m = selected?.diameter_m || 50;
-
-  return (
+  const [userPoint, setUserPoint] = useState(null);
+  const [rings, setRings] = useState(null);
+  /*return (
     <div className="grid grid-cols-3 h-screen">
       <div className="col-span-2 p-3 flex flex-col gap-3">
         <div className="p-3 bg-white rounded shadow">
@@ -223,7 +230,7 @@ useEffect(() => {
         )}
 
         <MitigationStrategies orbitEl={orbitEl} onApply={handleApplyMitigation} />
-
+        <UserImpactSimulator asteroid={selected} />
         <DataVisualizer series={[
           {t:0,v:diameter_m},
           {t:1,v:diameter_m*(impactData? 1.0:1.0)},
@@ -233,7 +240,86 @@ useEffect(() => {
         <Storytelling />
       </div>
     </div>
+  );*/
+return (
+    <div className="grid grid-cols-3 h-screen">
+      <div className="col-span-2 p-3 flex flex-col gap-3">
+        <div className="p-3 bg-white rounded shadow flex gap-4 items-center">
+          <label className="text-sm">Asteroide:</label>
+          <select onChange={(e) => handleSelectAsteroid(e.target.value)}>
+            {asteroids.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Botones para alternar */}
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => setManualMode(false)}
+              className={!manualMode ? "bg-blue-500 text-white px-3 py-1" : "px-3 py-1"}
+            >
+              Automático
+            </button>
+            <button
+              onClick={() => setManualMode(true)}
+              className={manualMode ? "bg-blue-500 text-white px-3 py-1" : "px-3 py-1"}
+            >
+              Manual
+            </button>
+          </div>
+        </div>
+
+        <TimeController
+          timeScale={scale}
+          onChangeScale={setScale}
+          date={"2025-09-27T12:00"}
+          onChangeDate={() => {}}
+        />
+
+        {manualMode ? (
+          <>
+            <ImpactMap onSelect={setUserPoint} impactRings={rings} />
+
+          </>
+        ) : useEarthView ? (
+          <EarthImpactView impact={impactData} />
+        ) : (
+          <OrbitalViewer3D />
+        )}
+      </div>
+
+      <div className="col-span-1 p-3 space-y-3 bg-gray-50 border-l">
+        {manualMode ? (
+          <div className="p-3 bg-white rounded shadow">
+            <p className="text-sm">📍 Selecciona un punto en el mapa para simular el impacto.</p>
+
+            {userPoint && (
+              <UserImpactSimulator
+                asteroid={selected}
+                lat={userPoint.lat}
+                lon={userPoint.lon}
+                onSimulate={setRings}
+              />
+            )}
+          
+          </div>
+        ) : impactData ? (
+          <ImpactSimulator intersection={impactData} diameter_m={diameter_m} />
+        ) : (
+          <div className="p-3 bg-white rounded shadow text-sm text-gray-600">
+            Este asteroide no presenta impacto con la Tierra en la simulación.
+          </div>
+        )}
+{/* Botones para alternar 
+        <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />*/}
+        <DataVisualizer series={[{ t: 0, v: diameter_m }]} />
+        <Storytelling />
+      </div>
+    </div>
   );
+
 }
 
 
