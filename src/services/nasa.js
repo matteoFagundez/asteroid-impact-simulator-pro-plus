@@ -1,48 +1,4 @@
 
-// src/services/nasa.js
-/*import axios from "axios";
-
-export async function fetchAsteroids(apiKey) {
-  try {
-    const url = `https://api.nasa.gov/neo/rest/v1/neo/browse?api_key=0F0V1Q57AyIuiOhu51CJXBF3unSZ80Dk5NP7KHoj&page=0&size=20`;
-    const res = await axios.get(url);
-
-    const list = res.data.near_earth_objects.map(n => {
-      // diámetro promedio en metros
-      const minDiam = n.estimated_diameter?.meters?.estimated_diameter_min || 50;
-      const maxDiam = n.estimated_diameter?.meters?.estimated_diameter_max || 60;
-      const diameter_m = Math.round((minDiam + maxDiam) / 2);
-
-      // velocidad relativa (primer acercamiento disponible)
-      const vel_kms = n.close_approach_data?.[0]?.relative_velocity?.kilometers_per_second
-        ? parseFloat(n.close_approach_data[0].relative_velocity.kilometers_per_second)
-        : 20;
-      const velocity_ms = vel_kms * 1000;
-
-      return {
-        id: n.id,
-        name: n.name,
-        // Orbital elements simplificados (se pueden extender con n.orbital_data si querés más precisión)
-        a_AU: parseFloat(n.orbital_data?.semi_major_axis) || 1.0,
-        e: parseFloat(n.orbital_data?.eccentricity) || 0.1,
-        i_deg: parseFloat(n.orbital_data?.inclination) || 5,
-        omega_deg: parseFloat(n.orbital_data?.ascending_node_longitude) || 80,
-        w_deg: parseFloat(n.orbital_data?.perihelion_argument) || 120,
-        M0_deg: parseFloat(n.orbital_data?.mean_anomaly) || 0,
-        epoch_jd: parseFloat(n.orbital_data?.epoch_jd) || 2460000.5,
-        diameter_m,     // metros
-        vel_kms,        // km/s (para UI)
-        velocity_ms     // m/s (para cálculos)
-      };
-    });
-
-    return list;
-  } catch (e) {
-    console.error("NASA fetch failed:", e?.message);
-    return [];
-  }
-}
-*/
 
 // src/services/nasa.js
 import axios from "axios";

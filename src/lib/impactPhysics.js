@@ -1,38 +1,4 @@
-/*// src/lib/impactPhysics.js
-export function impactMetrics({ diameter_m, velocity_ms, angle_deg }) {
-  const rho = 3000; // densidad promedio kg/m³
-  const r = diameter_m / 2;
-  const volume = (4 / 3) * Math.PI * Math.pow(r, 3);
-  const mass = rho * volume;
 
-  const angleRad = (angle_deg * Math.PI) / 180;
-  const KE = 0.5 * mass * velocity_ms * velocity_ms * Math.sin(angleRad);
-
-  // Conversión a megatones TNT (1 Mt = 4.184e15 J)
-  const KE_megatons = KE / 4.184e15;
-
-  // Escala del cráter (aproximada)
-  const rho_target = 2500;
-  const crater_diameter = 4 * diameter_m * Math.pow(rho / rho_target, 1 / 3);
-
-  return {
-    mass_kg: mass,
-    KE_J: KE,
-    KE_megatons,
-    crater_diameter_m: crater_diameter
-  };
-}
-
-// Radios de daño a partir del cráter
-export function impactRadii({ diameter_m, angle_deg }) {
-  const crater = 4 * diameter_m; // escala rápida
-  return {
-    severe: crater * 2,   // destrucción total
-    moderate: crater * 5, // colapso 
-    light: crater * 10    // onda expansiva
-  };
-}*/
-// src/lib/impactPhysics.js
 
 // src/lib/impactPhysics.js
 const J_PER_MT = 4.184e15;
