@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TimeController from './components/TimeController.jsx';
 import OrbitalViewer3D from './components/OrbitalViewer3D.jsx';
+import OrbitalViewerComponent from './components/OrbitalViewerComponent.jsx';
 import EarthImpactView from './components/EarthImpactView.jsx';
 import ImpactSimulator from './components/ImpactSimulator.jsx';
 import MitigationStrategies from './components/MitigationStrategies.jsx';
@@ -74,45 +75,6 @@ export default function App(){
     return out;
   }, [orbitEl, dateJD]);
 
-  /*
-  // 3) Recalcula impacto
-  useEffect(() => {
-    if (!orbitEl || !selected) { setImpactData(null); return; }
-
-    const intersection = findEarthIntersection(orbitEl, dateJD, dateJD + 10, 600);
-
-    if (!intersection) {
-      setImpactData(null); // no hay impacto
-      return;
-    }
-
-    // Convertir ECI → lat/lon
-    const { lat_deg, lon_deg } = eciToLatLon(intersection.t_jd, intersection.posECI);
-
-    const angle_deg = intersection.angle_deg || 45;
-
-    const metrics = impactMetrics({
-      diameter_m: selected.diameter_m,
-      velocity_ms: selected.velocity_ms,
-      angle_deg
-    });
-
-    const radii = impactRadii({
-      diameter_m: selected.diameter_m,
-      angle_deg
-    });
-
-    setImpactData({
-      lat: lat_deg,
-      lon: lon_deg,
-      t_jd: intersection.t_jd,
-      angle_deg,
-      velocity_ms: selected.velocity_ms,
-      metrics,
-      radii
-    });
-  }, [orbitEl, dateJD, selected]);
-*/
 useEffect(() => {
   (async()=>{
     if (!orbitEl || !selected) { setImpactData(null); return; }
@@ -175,72 +137,7 @@ useEffect(() => {
   const diameter_m = selected?.diameter_m || 50;
   const [userPoint, setUserPoint] = useState(null);
   const [rings, setRings] = useState(null);
-  /*return (
-    <div className="grid grid-cols-3 h-screen">
-      <div className="col-span-2 p-3 flex flex-col gap-3">
-        <div className="p-3 bg-white rounded shadow">
-          <div className="flex gap-2 items-center">
-            <label className="text-sm">Asteroide:</label>
-            <select onChange={e => handleSelectAsteroid(e.target.value)}>
-              {asteroids.map(a => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
-            <div className="ml-4 text-sm text-gray-600">
-              i={orbitEl?.i_deg?.toFixed?.(2)}°, e={orbitEl?.e?.toFixed?.(3)} | a={orbitEl?.a_AU} AU
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <label className="text-sm">Earth view</label>
-              <input type="checkbox" checked={useEarthView} onChange={e=>setUseEarthView(e.target.checked)} />
-            </div>
-          </div>
-        </div>
 
-        <TimeController
-          timeScale={scale}
-          onChangeScale={setScale}
-          date={"2025-09-27T12:00"}
-          onChangeDate={()=>{}}
-        />
-
-        {useEarthView ? (
-          <EarthImpactView impact={impactData} />
-        ) : (
-          <OrbitalViewer3D samplesAsteroid={samplesAsteroid} samplesEarth={samplesEarth} />
-        )}
-      </div>
-
-      <div className="col-span-1 p-3 space-y-3 bg-gray-50 border-l">
-        {impactData ? (
-          <ImpactSimulator
-            intersection={{
-              t_jd: impactData.t_jd,
-              angle_deg: impactData.angle_deg,
-              speed_ms: impactData.velocity_ms,
-              metrics: impactData.metrics,
-              radii: impactData.radii,
-              date_str: jdToDate(impactData.t_jd) // mostrar fecha estimada
-            }}
-            diameter_m={diameter_m}
-          />
-        ) : (
-          <div className="p-3 bg-white rounded shadow text-sm text-gray-600">
-            Este asteroide no presenta impacto con la Tierra en la simulación.
-          </div>
-        )}
-
-        <MitigationStrategies orbitEl={orbitEl} onApply={handleApplyMitigation} />
-        <UserImpactSimulator asteroid={selected} />
-        <DataVisualizer series={[
-          {t:0,v:diameter_m},
-          {t:1,v:diameter_m*(impactData? 1.0:1.0)},
-          {t:2,v:diameter_m*(impactData? 1.1:1.0)},
-        ]} />
-
-        <Storytelling />
-      </div>
-    </div>
-  );*/
 return (
     <div className="grid grid-cols-3 h-screen">
       <div className="col-span-2 p-3 flex flex-col gap-3">
@@ -284,10 +181,25 @@ return (
 
           </>
         ) : useEarthView ? (
-          <EarthImpactView impact={impactData} />
+          <>
+            <div className="flex flex-col h-full">
+              <div className="flex-1 min-h-0">
+                <EarthImpactView impact={impactData} />
+              </div>
+              <div className="flex-1 min-h-0">
+                <OrbitalViewerComponent 
+                  samplesEarth={samplesEarth} 
+                  samplesAsteroid={samplesAsteroid} 
+                />
+              </div>
+            </div>
+          </>
+
+
         ) : (
           <OrbitalViewer3D />
         )}
+        
       </div>
 
       <div className="col-span-1 p-3 space-y-3 bg-gray-50 border-l">
@@ -312,10 +224,11 @@ return (
             Este asteroide no presenta impacto con la Tierra en la simulación.
           </div>
         )}
-{/* Botones para alternar 
+{/* Botones para alternar <Storytelling />
         <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />*/}
+        <>
         <DataVisualizer series={[{ t: 0, v: diameter_m }]} />
-        <Storytelling />
+        </>
       </div>
     </div>
   );

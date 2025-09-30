@@ -25,6 +25,39 @@ export default function ImpactMap({ onSelect, impactRings }) {
     }*/
 
     }, [impactRings]);
+    const addScaleBar = (viewer, lat, lon, lengthMeters = 100000) => {
+      // Punto inicial
+      const start = Cartesian3.fromDegrees(lon, lat, 0);
+
+      // Calculamos offset longitudinal
+      const carto = Cartographic.fromDegrees(lon, lat);
+      const lonOffset = CesiumMath.toDegrees(lengthMeters / 6378137 / Math.cos(carto.latitude));
+      const end = Cartesian3.fromDegrees(lon + lonOffset, lat, 0);
+
+      // Línea
+      viewer.entities.add({
+        polyline: {
+          positions: [start, end],
+          width: 4,
+          material: Color.BLUE,
+        },
+      });
+
+      // Etiqueta
+      viewer.entities.add({
+        position: end,
+        label: {
+          text: `${lengthMeters / 1000} km`,
+          font: "16px sans-serif",
+          fillColor: Color.BLACK,
+          style: 2,
+          verticalOrigin: 1,
+          pixelOffset: new Cartesian3(0, -20, 0),
+        },
+      });
+    };
+
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -66,6 +99,7 @@ export default function ImpactMap({ onSelect, impactRings }) {
       if (viewer && !viewer.isDestroyed()) viewer.destroy();
     };
   }, [onSelect]);
+/*
 useEffect(() => {
   const viewer = viewerRef.current;
   if (!viewer || !impactRings) return;
@@ -118,6 +152,63 @@ const { severe, moderate, light } = radii;
   });
 }, [impactRings]);
 
+*/
+// Dibujar anillo cuando hay impacto
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !impactRings) return;
+
+    const { lat, lon, radii, severe, moderate, light } = impactRings;
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    // Si vienen "plano", normalizar a un objeto radii
+    const r = radii || { severe, moderate, light };
+
+    const safe = (val) => (Number.isFinite(val) && val > 0 ? val : null);
+
+    const s = safe(r.severe);
+    const m = safe(r.moderate);
+    const l = safe(r.light);
+
+    viewer.entities.removeAll();
+
+    // marcador central
+    viewer.entities.add({
+      position: Cartesian3.fromDegrees(lon, lat),
+      point: {
+        pixelSize: 10,
+        color: Color.RED,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+      },
+    });
+
+    const addRing = (radius, color) => {
+      if (!radius) return;
+      viewer.entities.add({
+        position: Cartesian3.fromDegrees(lon, lat),
+        ellipse: {
+          semiMajorAxis: radius,
+          semiMinorAxis: radius,
+          material: Color.fromCssColorString(color).withAlpha(0.25),
+          outline: true,
+          outlineColor: Color.fromCssColorString(color),
+          height: 0,
+        },
+      });
+    };
+
+    addRing(s, "#dc2626"); // severa
+    addRing(m, "#ea580c"); // moderada
+    addRing(l, "#ca8a04"); // leve
+
+    addScaleBar(viewer, lat, lon, 100000);
+
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(lon, lat, 200000),
+    });
+  }, [impactRings]);
 
   return <div ref={containerRef} className="h-96 w-full rounded overflow-hidden" />;
 }
