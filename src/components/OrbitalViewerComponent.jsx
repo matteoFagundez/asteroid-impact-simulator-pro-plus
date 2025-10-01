@@ -10,7 +10,7 @@ export default function OrbitalViewerComponent({ samplesEarth = [], samplesAster
     if (!mountRef.current) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(0xFFF2F2);
 
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -30,37 +30,39 @@ export default function OrbitalViewerComponent({ samplesEarth = [], samplesAster
     );
     scene.add(sun);
 
-    const light = new THREE.PointLight(0xffffff, 2);
+    const light = new THREE.PointLight(0xffffff, 90);
     light.position.set(0, 0, 0);
     scene.add(light);
 
     const loader = new THREE.TextureLoader();
 
-       const earthTexture = loader.load(
-        "https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg"
-        );
+    const earthTexture = loader.load(
+      "https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg"
+    );
 
-        const earth = new THREE.Mesh(
-        new THREE.SphereGeometry(0.6, 64, 64),
-        new THREE.MeshPhongMaterial({
-            map: earthTexture
-        })
-        );
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(1.5, 64, 64),
+      new THREE.MeshPhongMaterial({
+        map: earthTexture
+      })
+    );
 
-        scene.add(earth);
+    scene.add(earth);
 
 
     const asteroidTexture = loader.load(
-        "https://threejs.org/examples/textures/planets/moon_1024.jpg"
-        );
+      //"https://threejs.org/examples/textures/planets/moon_1024.jpg"
+      "/textures/asteroid2.png"
+    );
 
     const asteroid = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 64, 64),
-        new THREE.MeshPhongMaterial({
-            map: asteroidTexture,
-            bumpMap: asteroidTexture, 
-            bumpScale: 0.05
-        })
+      new THREE.SphereGeometry(0.8, 64, 64),
+      new THREE.MeshPhongMaterial({
+        map: asteroidTexture,
+        bumpMap: asteroidTexture, 
+        bumpScale: 0.05,
+        emissive: new THREE.Color(0x333333)
+        }),
     );
 
     scene.add(asteroid);

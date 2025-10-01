@@ -178,7 +178,12 @@ return (
         {manualMode ? (
           <>
             <ImpactMap onSelect={setUserPoint} impactRings={rings} />
-
+              <div className="flex-1 min-h-0">
+                <OrbitalViewerComponent 
+                  samplesEarth={samplesEarth} 
+                  samplesAsteroid={samplesAsteroid} 
+                />
+              </div>
           </>
         ) : useEarthView ? (
           <>
@@ -208,12 +213,15 @@ return (
             <p className="text-sm">📍 Selecciona un punto en el mapa para simular el impacto.</p>
 
             {userPoint && (
-              <UserImpactSimulator
+              <><UserImpactSimulator
                 asteroid={selected}
                 lat={userPoint.lat}
                 lon={userPoint.lon}
                 onSimulate={setRings}
               />
+              
+              </>
+              
             )}
           
           </div>
@@ -227,6 +235,7 @@ return (
 {/* Botones para alternar <Storytelling />
         <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />*/}
         <>
+        <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />
         <DataVisualizer series={[{ t: 0, v: diameter_m }]} />
         </>
       </div>
