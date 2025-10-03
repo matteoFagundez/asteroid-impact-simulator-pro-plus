@@ -16,6 +16,9 @@ import { impactMetrics, impactRadii } from './lib/impactPhysics.js';
 import { findNodeImpactCandidate } from './lib/nodeImpact.js';
 import ImpactMap from "./components/ImpactMap.jsx"; 
 import UserImpactSimulator from "./components/UserImpactSimulator.jsx"; 
+import ImpactAndOrbitPanels from "./components/ImpactAndOrbitPanels.jsx";
+import ManualImpactLayout from "./components/ManualImpactLayout";
+
 
 
 // util para convertir Julian Date a fecha legible
@@ -74,7 +77,9 @@ export default function App(){
     }
     return out;
   }, [orbitEl, dateJD]);
-
+  const diameter_m = selected?.diameter_m || 50;
+  const [userPoint, setUserPoint] = useState(null);
+  const [rings, setRings] = useState(null);
 useEffect(() => {
   (async()=>{
     if (!orbitEl || !selected) { setImpactData(null); return; }
@@ -129,75 +134,124 @@ useEffect(() => {
   })();
 }, [orbitEl, selected, dateJD]);
 
-  // 4) Handler de mitigación → aplica Δv y fuerza recomputación
-  const handleApplyMitigation = (newOrbit) => {
-    setOrbitEl(newOrbit);
-  };
+useEffect(() => {
+  if (manualMode && orbitEl && userPoint) {
+    const diameter_m = orbitEl.diameter_m || selected?.diameter_m || 50;
+    const velocity_ms = orbitEl.velocity_ms || selected?.velocity_ms || 20000;
+    const angle_deg = userAngle || orbitEl.angle_deg || 45;
+    const density_kgm3 = orbitEl.density_kgm3 || 3000;
 
-  const diameter_m = selected?.diameter_m || 50;
-  const [userPoint, setUserPoint] = useState(null);
-  const [rings, setRings] = useState(null);
+    const metrics = impactMetrics({ diameter_m, velocity_ms, angle_deg, density_kgm3 });
+    const radii = impactRadii({ diameter_m, velocity_ms, angle_deg, density_kgm3 });
+
+    setRings({
+      lat: userPoint.lat,
+      lon: userPoint.lon,
+      radii,
+      metrics,
+      velocity_ms,
+      angle_deg,
+    });
+  }
+}, [manualMode, orbitEl, userPoint, userAngle, selected]);
+
+
+
+  // 4) Handler de mitigación → aplica Δv y fuerza recomputación
+const handleApplyMitigation = (newOrbit) => {
+  setOrbitEl(newOrbit);
+
+  //if (manualMode) {
+    // Recalcular candidato con la órbita mitigada
+    const node = findNodeImpactCandidate(newOrbit, dateJD);
+    if (node) {
+      setUserPoint({
+        ...newOrbit,
+        lat: node.lat_deg,
+        lon: node.lon_deg,
+      });
+      setUserAngle(node.angle_deg || 45);
+    } else {
+      // Si ya no hay impacto, borramos los rings
+      setUserPoint(null);
+      setRings(null);
+    }
+  //}
+};
+
+
+
+
 
 return (
+  <div className="bg-space bg-cover bg-center bg-no-repeat h-screen w-screen">
     <div className="grid grid-cols-3 h-screen">
       <div className="col-span-2 p-3 flex flex-col gap-3">
-        <div className="p-3 bg-white rounded shadow flex gap-4 items-center">
-          <label className="text-sm">Asteroide:</label>
-          <select onChange={(e) => handleSelectAsteroid(e.target.value)}>
+        <div className="flex items-center gap-4 bg-[#1e293b] text-white p-3 rounded shadow-md border border-gray-700">
+          {/* 🌌 Label e input */}
+          <label className="text-sm font-bold text-cyan-300">ASTEROID:</label>
+          <select
+            onChange={(e) => handleSelectAsteroid(e.target.value)}
+            className="bg-[#0f172a] text-white px-2 py-1 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          >
             {asteroids.map((a) => (
-              <option key={a.id} value={a.id}>
+              <option key={a.id} value={a.id} className="bg-[#0f172a] text-white">
                 {a.name}
               </option>
             ))}
           </select>
 
-          {/* Botones para alternar */}
+          {/* 🚀 Botones modo */}
           <div className="ml-auto flex gap-2">
             <button
               onClick={() => setManualMode(false)}
-              className={!manualMode ? "bg-blue-500 text-white px-3 py-1" : "px-3 py-1"}
+              className={`px-4 py-2 rounded font-semibold tracking-wide transition ${
+                !manualMode
+                  ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/30"
+                  : "bg-[#0f172a] text-gray-300 border border-gray-600 hover:bg-gray-700"
+              }`}
             >
-              Automático
+              🌐 Automático
             </button>
             <button
               onClick={() => setManualMode(true)}
-              className={manualMode ? "bg-blue-500 text-white px-3 py-1" : "px-3 py-1"}
+              className={`px-4 py-2 rounded font-semibold tracking-wide transition ${
+                manualMode
+                  ? "bg-orange-600 text-white shadow-lg shadow-orange-500/30"
+                  : "bg-[#0f172a] text-gray-300 border border-gray-600 hover:bg-gray-700"
+              }`}
             >
-              Manual
+              🎛️ Manual
             </button>
           </div>
         </div>
 
-        <TimeController
-          timeScale={scale}
-          onChangeScale={setScale}
-          date={"2025-09-27T12:00"}
-          onChangeDate={() => {}}
-        />
+
+        
 
         {manualMode ? (
           <>
-            <ImpactMap onSelect={setUserPoint} impactRings={rings} />
-              <div className="flex-1 min-h-0">
-                <OrbitalViewerComponent 
-                  samplesEarth={samplesEarth} 
-                  samplesAsteroid={samplesAsteroid} 
-                />
-              </div>
+           <ManualImpactLayout
+            asteroid={selected}
+            impactRings={rings}
+            onSelectPoint={setUserPoint}
+            userPoint={userPoint}
+            onSimulate={setRings}
+            samplesEarth={samplesEarth}
+            samplesAsteroid={samplesAsteroid}
+            orbitEl={orbitEl}
+            onApplyMitigation={handleApplyMitigation}
+          />
+
           </>
         ) : useEarthView ? (
           <>
-            <div className="flex flex-col h-full">
-              <div className="flex-1 min-h-0">
-                <EarthImpactView impact={impactData} />
-              </div>
-              <div className="flex-1 min-h-0">
-                <OrbitalViewerComponent 
-                  samplesEarth={samplesEarth} 
-                  samplesAsteroid={samplesAsteroid} 
-                />
-              </div>
-            </div>
+            <ImpactAndOrbitPanels
+              impactData={impactData}
+              samplesEarth={samplesEarth}
+              samplesAsteroid={samplesAsteroid}
+            />
+
           </>
 
 
@@ -207,39 +261,44 @@ return (
         
       </div>
 
-      <div className="col-span-1 p-3 space-y-3 bg-gray-50 border-l">
-        {manualMode ? (
-          <div className="p-3 bg-white rounded shadow">
-            <p className="text-sm">📍 Selecciona un punto en el mapa para simular el impacto.</p>
+      <div className="col-span-1 p-3 space-y-3 bg-[#0f172a] border-l border-cyan-700/40 overflow-y-auto text-cyan-200 font-mono">
 
-            {userPoint && (
-              <><UserImpactSimulator
-                asteroid={selected}
-                lat={userPoint.lat}
-                lon={userPoint.lon}
-                onSimulate={setRings}
-              />
-              
-              </>
-              
-            )}
-          
-          </div>
+        {manualMode ? (
+          <>
+            <MitigationStrategies orbitEl={orbitEl} onApply={handleApplyMitigation} />
+
+
+            <div className="rounded border-t border-gray-300 pt-3">
+              {userPoint ? (
+                <UserImpactSimulator
+                  asteroid={orbitEl}
+                  lat={userPoint.lat}
+                  lon={userPoint.lon}
+                  impactData={rings}
+                  onSimulate={setRings}
+                />
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Selecciona un punto en el mapa para simular impacto.
+                </p>
+              )}
+            </div>
+          </>
         ) : impactData ? (
-          <ImpactSimulator intersection={impactData} diameter_m={diameter_m} />
+          <>
+            <ImpactSimulator intersection={impactData} diameter_m={diameter_m} />
+            <MitigationStrategies orbitEl={orbitEl} onApply={handleApplyMitigation} />
+            
+          </>
         ) : (
-          <div className="p-3 bg-white rounded shadow text-sm text-gray-600">
-            Este asteroide no presenta impacto con la Tierra en la simulación.
+          <div className="p-6 rounded-lg shadow-md bg-[#1e293b]/80 border border-cyan-400 text-center text-cyan-200 font-mono">
+            <p className="text-lg font-bold mb-2">🛰️ No Impact Detected</p>
           </div>
         )}
-{/* Botones para alternar <Storytelling />
-        <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />*/}
-        <>
-        <MitigationStrategies orbitEl={orbitEl} onApply={(o) => setOrbitEl(o)} />
-        <DataVisualizer series={[{ t: 0, v: diameter_m }]} />
-        </>
       </div>
+
     </div>
+  </div>
   );
 
 }
