@@ -187,8 +187,15 @@ return (
   <div className="bg-space bg-cover bg-center bg-no-repeat h-screen w-screen">
     <div className="grid grid-cols-3 h-screen">
       <div className="col-span-2 p-3 flex flex-col gap-3">
+        {/* Imagen de encabezado */}
+      <div className="w-full flex justify-center mb-3">
+        
+      </div>
         <div className="flex items-center gap-4 bg-[#1e293b] text-white p-3 rounded shadow-md border border-gray-700">
-          {/* 🌌 Label e input */}
+          
+          
+        
+          {/* Label e input */}
           <label className="text-sm font-bold text-cyan-300">ASTEROID:</label>
           <select
             onChange={(e) => handleSelectAsteroid(e.target.value)}
@@ -200,8 +207,12 @@ return (
               </option>
             ))}
           </select>
-
-          {/* 🚀 Botones modo */}
+          <img
+            src="/assets/Novasteroid.png" 
+            alt="Asteroid Header"
+            className="w-52 h-auto object-contain"
+          />
+          {/* Botones modo */}
           <div className="ml-auto flex gap-2">
             <button
               onClick={() => setManualMode(false)}
@@ -211,7 +222,7 @@ return (
                   : "bg-[#0f172a] text-gray-300 border border-gray-600 hover:bg-gray-700"
               }`}
             >
-              🌐 Automático
+              🌐 Automátic
             </button>
             <button
               onClick={() => setManualMode(true)}

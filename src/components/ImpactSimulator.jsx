@@ -28,8 +28,8 @@ export default function ImpactSimulator({ intersection, diameter_m }) {
         <label className="text-cyan-300 text-xs tracking-wide">IMPACT DETAILS</label>
         <span className="text-sm text-orange-400 font-semibold">
           {diffDays >= 0
-            ? `EN ${diffDays} DÍAS`
-            : `HACE ${Math.abs(diffDays)} DÍAS`}
+            ? `IN ${diffDays} DAYS`
+            : `${Math.abs(diffDays)}  DAYS AGO`}
         </span>
       </div>
 
