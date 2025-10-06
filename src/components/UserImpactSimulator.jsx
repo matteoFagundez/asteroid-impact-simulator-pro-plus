@@ -69,7 +69,12 @@ const handleSimulate = () => {
     setResult(data);
     if (onSimulate) onSimulate(data);
   };
-  const dateStr = result ? jdToDate(result.t_jd).toISOString().split("T")[0] : null;
+  const jdDate = result ? jdToDate(result.t_jd) : null;
+  const dateStr =
+    jdDate && !isNaN(jdDate.getTime())
+      ? jdDate.toISOString().split("T")[0]
+      : null;
+  //const dateStr = result ? jdToDate(result.t_jd).toISOString().split("T")[0] : null;
 
   return (
     <div className="p-4 bg-[#0f172a] text-white rounded-xl shadow-lg space-y-3 border border-gray-700 font-mono h-[330px] overflow-hidden">
